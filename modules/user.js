@@ -1,6 +1,7 @@
 const DB = require('./common/db_pool')
 const SCHEMA = process.env.SCHEMA
 const BCRYPT = require('bcrypt')
+const VALIDATOR = require('email-validator');
 
 function encrypt (text) {
   return BCRYPT.hashSync(text, 14)
@@ -21,6 +22,17 @@ function readUsers() {
 
 async function insertUser(req) {
   const { id, name, email, password, phone, enabled } = req.body.data
+
+
+  // Validate email
+  if ('email' in req.body.data) {
+    const emailIsValid = VALIDATOR.validate(req.body.data.email);
+    if (!emailIsValid) {
+      return Promise.reject({
+        message: 'Please enter a valid email address'
+      })
+    }
+  }
 
   // Validate Password
   if ('password' in req.body.data) {
