@@ -15,7 +15,7 @@ To set up the environment apply the following steps:
 `SECRET=my_secret`
 `PORT=3000`
 `DB_NAME=Topology_Admin`
-`DB_USER=my_user`
+`DB_USER=postgres`
 `DB_PASSWORD=my_password`
 `DB_HOST=localhost`
 `DB_PORT=5432`
