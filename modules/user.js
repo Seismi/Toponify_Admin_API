@@ -79,7 +79,7 @@ function getUserDetailsForToken(req) {
     , enabled_flag as "enabled"
     from ${SCHEMA}.users
     where lower(email) = $1`
-    , [req.body.data.username]
+    , [req.body.data.username.toLowerCase()]
   )
   .then(result => {
     if (result.rows.length === 0) {
