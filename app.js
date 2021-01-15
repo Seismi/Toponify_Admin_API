@@ -3,13 +3,13 @@ const PATH = require('path')
 const BODY_PARSER = require('body-parser')
 const CORS = require('cors')
 
+const DOTENV = require('dotenv')
+  .config({ path: PATH.join(__dirname, '.env' )})
+
 const APP = EXPRESS()
 const PORT = process.env.PORT !== undefined ? process.env.PORT : 3000
 
 APP.set('port', parseInt(PORT))
-
-const DOTENV = require('dotenv')
-  .config({ path: PATH.join(__dirname, '.env' )})
 
 APP.use(BODY_PARSER.json())
 APP.use(BODY_PARSER.urlencoded({ extended: false }))

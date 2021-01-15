@@ -81,7 +81,7 @@ function validatePasswordAndPrivileges(user, req) {
   return BCRYPT.compare(req.body.data.password, user.password)
     .then(function(passed) {
       if (!passed) { 
-        return Promise.reject({ message: 'Invalid usernamem or password' })
+        return Promise.reject({ message: 'Invalid username or password' })
       }
       if (!user.enabled) {
         return Promise.reject({ message: 'Insufficient privileges' })

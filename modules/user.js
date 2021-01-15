@@ -1,6 +1,7 @@
 const DB = require('./common/db_pool')
 const SCHEMA = process.env.SCHEMA
 const BCRYPT = require('bcrypt')
+const VALIDATOR = require('email-validator');
 
 function encrypt (text) {
   return BCRYPT.hashSync(text, 14)
@@ -8,33 +9,29 @@ function encrypt (text) {
 
 function readUsers() {
   return DB.sQL(`
-    SELECT 
-      id, 
-      name, 
-      email, 
-      telephone_number as "phone", 
-      enabled_flag as "enabled" 
-    FROM ${SCHEMA}.users`, 
-    []
+    select 
+      id
+    , name
+    , email
+    , telephone_number as "phone"
+    , enabled_flag as "enabled" 
+    from ${SCHEMA}.users`
+    , []
   )
 }
 
 async function insertUser(req) {
   const { id, name, email, password, phone, enabled } = req.body.data
 
-  // Validate email domain
-  if ('email' in req.body) {
-    const at = req.body.email.indexOf('@')
-    const domain = (at !== -1) ? req.body.email.substr(at + 1) : ''
-    await DB.sQL(`
-      WITH setup AS (SELECT COALESCE(email_domains, array[]::varchar[]) AS edoms FROM ${SCHEMA}.application_setup)
-      SELECT(SELECT array_ndims(edoms) FROM setup) is null OR $1 = any(SELECT unnest(edoms) FROM setup) as "checkDom"`, 
-      [domain]
-    ).then(result => {
-      if (!result.rows[0].checkDom) {
-        return Promise.reject({ message: 'Supplied email not in a valid domain' })
-      }
-    })
+
+  // Validate email
+  if ('email' in req.body.data) {
+    const emailIsValid = VALIDATOR.validate(req.body.data.email);
+    if (!emailIsValid) {
+      return Promise.reject({
+        message: 'Please enter a valid email address'
+      })
+    }
   }
 
   // Validate Password
@@ -48,40 +45,53 @@ async function insertUser(req) {
   }
 
   return await DB.sQL(`
-    WITH new_id AS (SELECT COALESCE($6, gen_random_uuid()) as val)
-    INSERT INTO ${SCHEMA}.users (
-      id,
-      name,
-      email,
-      password,
-      telephone_number,
-      enabled_flag
+    with new_id as (
+      select coalesce($6, gen_random_uuid()) as val
+    )
+    insert into ${SCHEMA}.users (
+        id
+      , name
+      , email
+      , password
+      , telephone_number
+      , enabled_flag
     ) 
-    VALUES ((SELECT val FROM new_id), $1, $2, $3, $4, $5)
-    RETURNING
-      id,
-      name,
-      email,
-      password,
-      telephone_number as "phone",
-      enabled_flag as "enabled"
-    `,
-    [name, email, encrypt(password), phone, enabled, id]
+    values (
+      (select val from new_id)
+      , $1
+      , $2
+      , $3
+      , $4
+      , $5
+    )
+    returning 
+      id
+    , name
+    , email
+    , password
+    , telephone_number as "phone"
+    , enabled_flag as "enabled"`
+    , [name
+      , email
+      , encrypt(password)
+      , phone
+      , enabled
+      , id]
   )
 }
 
 function getUserDetailsForToken(req) {
   return DB.sQL(`
-    SELECT 
-      id, 
-      name, 
-      email, 
-      password, 
-      telephone_number as "phone", 
-      enabled_flag as "enabled"
-    FROM ${SCHEMA}.users
-    WHERE LOWER(email) = $1`,
-    [req.body.data.username]
+    select 
+      id
+    , name
+    , email
+    , password
+    , telephone_number as "phone"
+    , enabled_flag as "enabled"
+    from ${SCHEMA}.users
+    where lower(email) = $1`
+    , [req.body.data.username.toLowerCase()]
   )
   .then(result => {
     if (result.rows.length === 0) {
@@ -96,8 +106,11 @@ function getUserDetailsForToken(req) {
 function revokeToken (req) {
   const authToken = req.headers.authorization.replace('Bearer ', '')
   return DB.sQL(
-    `INSERT INTO ${SCHEMA}.revoked_tokens (token, revoked_on) VALUES ($1, localtimestamp)`, 
-    [authToken]
+    `insert into ${SCHEMA}.revoked_tokens (
+        token
+      , revoked_on
+      ) values ($1, localtimestamp)`
+    , [authToken]
   );
 }
 
