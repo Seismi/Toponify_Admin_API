@@ -20,6 +20,22 @@ function readUsers() {
   )
 }
 
+
+function readUser(req) {
+  return DB.sQL(
+    `select
+        id
+      , name
+      , email
+      , telephone_number as "phone"
+      , enabled_flag as "enabled"
+      from ${SCHEMA}.users
+      where id = $1`
+    , [req.params.userId]
+  )
+}
+
+
 async function insertUser(req) {
   const { id, name, email, password, phone, enabled } = req.body.data
 
@@ -80,6 +96,58 @@ async function insertUser(req) {
   )
 }
 
+
+async function updateUser(req) {
+  
+  // Validate email domain
+  if ('email' in req.body.data) {
+    const emailIsValid = VALIDATOR.validate(req.body.data.email);
+    if (!emailIsValid) {
+      return Promise.reject({
+        message: 'Please enter a valid email address'
+      })
+    }
+  }
+
+  await DB.sQL(
+    `update ${SCHEMA}.users set
+        name = coalesce($2, name)
+      , email = coalesce($3, email)
+      , telephone_number = coalesce($4, telephone_number)
+      , enabled_flag = coalesce($5, enabled_flag)
+      where id = $1`
+    , [req.params.userId
+      , req.body.data.name
+      , req.body.data.email
+      , req.body.data.phone
+      , req.body.data.enabled]
+  )
+  return readUser(req)
+}
+
+
+async function enableUser(req) {
+  await DB.sQL(
+    `update ${SCHEMA}.users set
+        enabled_flag = true
+      where id = $1`
+    , [req.params.userId]
+  )
+  return readUser(req)
+}
+
+
+async function disableUser(req) {
+  await DB.sQL(
+    `update ${SCHEMA}.users set
+        enabled_flag = false
+      where id = $1`
+    , [req.params.userId]
+  )
+  return readUser(req)
+}
+
+
 function getUserDetailsForToken(req) {
   return DB.sQL(`
     select 
@@ -125,5 +193,9 @@ module.exports = {
   insertUser,
   getUserDetailsForToken,
   revokeToken,
-  checkPassword
+  checkPassword,
+  updateUser,
+  readUser,
+  enableUser,
+  disableUser
 }
