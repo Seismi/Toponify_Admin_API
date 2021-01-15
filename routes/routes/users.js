@@ -21,6 +21,20 @@ ROUTER.get('/users'
   , ERROR_HANDLER
 )
 
+//Route to read all details for a user
+ROUTER.get('/users/:userId'
+  , AUTH.checkAuthenticated
+  , function getUser (req, res, next) {
+      USER.readUser(req)
+        .then(function(result) {
+          res.setHeader(CONTENT, JSON_TYPE)
+          res.send(JSON.stringify({ data: result.rows[0] }))
+        })
+        .catch(error => next(error))
+    }
+  , ERROR_HANDLER
+)
+
 // Route to insert a new user
 ROUTER.post('/users'
   , AUTH.checkAuthenticated
