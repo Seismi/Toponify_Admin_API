@@ -7,6 +7,8 @@ function encrypt (text) {
   return BCRYPT.hashSync(text, 14)
 }
 
+
+// Read all users
 function readUsers() {
   return DB.sQL(`
     select 
@@ -20,7 +22,7 @@ function readUsers() {
   )
 }
 
-
+// Read details for a user
 function readUser(req) {
   return DB.sQL(
     `select
@@ -35,10 +37,9 @@ function readUser(req) {
   )
 }
 
-
+// Insert user
 async function insertUser(req) {
   const { id, name, email, password, phone, enabled } = req.body.data
-
 
   // Validate email
   if ('email' in req.body.data) {
@@ -96,9 +97,8 @@ async function insertUser(req) {
   )
 }
 
-
+// Update user
 async function updateUser(req) {
-  
   // Validate email domain
   if ('email' in req.body.data) {
     const emailIsValid = VALIDATOR.validate(req.body.data.email);
@@ -125,7 +125,7 @@ async function updateUser(req) {
   return readUser(req)
 }
 
-
+// Enable user
 async function enableUser(req) {
   await DB.sQL(
     `update ${SCHEMA}.users set
@@ -136,7 +136,7 @@ async function enableUser(req) {
   return readUser(req)
 }
 
-
+// Disable user
 async function disableUser(req) {
   await DB.sQL(
     `update ${SCHEMA}.users set
@@ -147,7 +147,7 @@ async function disableUser(req) {
   return readUser(req)
 }
 
-
+// Function to return user details needed for web token from the database.
 function getUserDetailsForToken(req) {
   return DB.sQL(`
     select 
@@ -171,6 +171,7 @@ function getUserDetailsForToken(req) {
   })
 }
 
+// Revoke a user's authorisation token
 function revokeToken (req) {
   const authToken = req.headers.authorization.replace('Bearer ', '')
   return DB.sQL(
@@ -187,6 +188,7 @@ function checkPassword(password) {
   const regex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
   return regex.test(password);
 }
+
 
 module.exports = { 
   readUsers,
