@@ -21,6 +21,20 @@ ROUTER.get('/users'
   , ERROR_HANDLER
 )
 
+//Route to read all details for a user
+ROUTER.get('/users/:userId'
+  , AUTH.checkAuthenticated
+  , function getUser (req, res, next) {
+      USER.readUser(req)
+        .then(function(result) {
+          res.setHeader(CONTENT, JSON_TYPE)
+          res.send(JSON.stringify({ data: result.rows[0] }))
+        })
+        .catch(error => next(error))
+    }
+  , ERROR_HANDLER
+)
+
 // Route to insert a new user
 ROUTER.post('/users'
   , AUTH.checkAuthenticated
@@ -70,6 +84,57 @@ ROUTER.post('/users/logout'
         .catch(error => next(error))
       next()
   }
+  , ERROR_HANDLER
+)
+
+
+// Route to update a user
+ROUTER.put('/users/:userId'
+  , AUTH.checkAuthenticated
+  , function putUser (req, res, next) {
+      USER.updateUser(req)
+        .then(function(result) {
+          res.setHeader(CONTENT, JSON_TYPE)
+          res.status(200)
+            .send(JSON.stringify({ data: result.rows[0] }))
+          next()
+        })
+        .catch(error => next(error))
+    }
+  , ERROR_HANDLER
+)
+
+
+// Route to enable a user
+ROUTER.post('/users/:userId/enable'
+  , AUTH.checkAuthenticated
+  , function reEnableUser (req, res, next) {
+      USER.enableUser(req, res)
+        .then(function(result) {
+          res.setHeader(CONTENT, JSON_TYPE)
+          res.status(200)
+            .send(JSON.stringify({ data: result.rows[0] }))
+          next()
+        })
+        .catch(error => next(error))
+    }
+  , ERROR_HANDLER
+)
+
+
+// Route to disable a user
+ROUTER.post('/users/:userId/disable'
+  , AUTH.checkAuthenticated
+  , function removeUser (req, res, next) {
+      USER.disableUser(req, res)
+        .then(function(result) {
+          res.setHeader(CONTENT, JSON_TYPE)
+          res.status(200)
+            .send(JSON.stringify({ data: result.rows[0] }))
+          next()
+        })
+        .catch(error => next(error))
+    }
   , ERROR_HANDLER
 )
 
