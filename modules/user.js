@@ -85,7 +85,6 @@ async function insertUser(req) {
       id
     , name
     , email
-    , password
     , telephone_number as "phone"
     , enabled_flag as "enabled"`
     , [name
