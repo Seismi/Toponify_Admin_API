@@ -1,3 +1,7 @@
+--
+-- PostgreSQL database
+--
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -22,10 +26,10 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 
+--
+-- TOKENS
+--
 
-/*
-  TOKENS
-*/
 CREATE TABLE public.revoked_tokens (
     token character varying NOT NULL,
     revoked_on timestamp without time zone NOT NULL
@@ -34,10 +38,9 @@ CREATE TABLE public.revoked_tokens (
 ALTER TABLE public.revoked_tokens OWNER TO postgres;
 
 
-
-/*
-  USERS
-*/
+--
+-- USERS
+--
 
 CREATE TABLE public.users (
     id uuid NOT NULL,
@@ -49,6 +52,9 @@ CREATE TABLE public.users (
 );
 
 ALTER TABLE public.users OWNER TO postgres;
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT email UNIQUE (email);
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
